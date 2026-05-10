@@ -1,16 +1,16 @@
 import Link from 'next/link'
 import { ArrowRight, Clock, Sparkles, Plus, Copy } from 'lucide-react'
-import { combos, currentUser, getPluginById } from '@/lib/mock-data'
+import { combos, currentUser, getPluginById, skillPlugins } from '@/lib/mock-data'
 import { formatRelative } from '@/lib/date-utils'
 
 export function QuickStart() {
   const recentCombo = combos[0]
-  const recentClient = getPluginById(recentCombo.clientId)
-  const recentSkill = getPluginById(recentCombo.skillId)
+  const recentClient = recentCombo ? getPluginById(recentCombo.clientId) : undefined
+  const recentSkill = recentCombo ? getPluginById(recentCombo.skillId) : undefined
 
-  // 역할 기반 추천: Researcher는 클라이언트 리서치 요약을 자주 쓴다.
   const recommendedClient = getPluginById('client-ripple')
-  const recommendedSkill = getPluginById('skill-research-summary')
+  const recommendedSkill =
+    skillPlugins.find((p) => p.team === currentUser.team) ?? skillPlugins[0]
 
   return (
     <section>
@@ -21,30 +21,34 @@ export function QuickStart() {
         </p>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <QuickCard
-          icon={<Clock className="size-4" />}
-          tag="최근 쓴 조합"
-          title={`${recentClient?.name} × ${recentSkill?.name}`}
-          description={`마지막 사용 ${formatRelative(recentCombo.lastUsedAt)}`}
-          action={
-            <button className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
-              <Copy className="size-3.5" />
-              다시 사용
-            </button>
-          }
-        />
-        <QuickCard
-          icon={<Sparkles className="size-4" />}
-          tag={`${currentUser.role} 추천`}
-          title={`${recommendedClient?.name} × ${recommendedSkill?.name}`}
-          description="역할과 최근 활동 패턴을 바탕으로 추천된 조합입니다."
-          action={
-            <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted">
-              <Copy className="size-3.5" />
-              조합 복사
-            </button>
-          }
-        />
+        {recentCombo && recentClient && recentSkill ? (
+          <QuickCard
+            icon={<Clock className="size-4" />}
+            tag="최근 쓴 조합"
+            title={`${recentClient.name} × ${recentSkill.name}`}
+            description={`마지막 사용 ${formatRelative(recentCombo.lastUsedAt)}`}
+            action={
+              <button className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
+                <Copy className="size-3.5" />
+                다시 사용
+              </button>
+            }
+          />
+        ) : null}
+        {recommendedClient && recommendedSkill ? (
+          <QuickCard
+            icon={<Sparkles className="size-4" />}
+            tag={`${currentUser.role} 추천`}
+            title={`${recommendedClient.name} × ${recommendedSkill.name}`}
+            description="역할과 최근 활동 패턴을 바탕으로 추천된 조합입니다."
+            action={
+              <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted">
+                <Copy className="size-3.5" />
+                조합 복사
+              </button>
+            }
+          />
+        ) : null}
         <Link
           href="/skills"
           className="flex flex-col items-start justify-between rounded-xl border border-dashed border-border bg-background/60 p-5 transition-colors hover:border-primary/50 hover:bg-primary/5"

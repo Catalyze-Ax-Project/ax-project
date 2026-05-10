@@ -15,7 +15,7 @@ export type SkillFrontmatter = {
   team: Team
   category: string
   core_value: string
-  trigger: string
+  trigger?: string
   linked_clients?: string[]
   linked_skills?: string[]
   tags?: string[]
