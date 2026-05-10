@@ -43,3 +43,7 @@ next-env.d.ts
 # local claude settings & personal memory export
 .claude/
 memory-export/
+
+# plugin repo sync (fetched at build time)
+.plugin-cache/
+lib/data/plugins.generated.json

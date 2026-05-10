@@ -1,7 +1,13 @@
 // ============================================================================
 // Catalyze Harness — Mock Data
 // 시연용 더미 데이터. 실제 API 연동 전까지 모든 페이지가 이 파일을 import한다.
+//
+// Skill 데이터의 일부는 외부 plugin repo (Catalyze-Ax-Project/plugin) md 파일에서
+// 빌드 시점에 동기화된다. lib/plugins-data.ts 참조.
+// 본 파일의 plugins 배열에는 그 외부 skill들이 자동으로 포함된다 (파일 하단 참고).
 // ============================================================================
+
+import { externalSkills } from './plugins-data'
 
 export type Team = 'common' | 'bd' | 'marketing' | 'dev-growth' | 'operations'
 export type PluginKind = 'client' | 'skill' | 'agent' | 'common'
@@ -109,10 +115,12 @@ export const DISCUSSION_STATUS_LABEL: Record<DiscussionStatus, string> = {
 }
 
 // ----------------------------------------------------------------------------
-// Plugins (12개 = common 1 + BD 3 + Marketing 3 + Dev Growth 2 + Client 3)
+// Plugins
+// - builtInPlugins: 본 파일에서 정의하는 더미 12개 (common 1 + BD 3 + Marketing 3 + Dev Growth 2 + Client 3)
+// - externalSkills (plugin repo)에서 추가 skill을 합쳐 최종 `plugins`로 export
 // ----------------------------------------------------------------------------
 
-export const plugins: Plugin[] = [
+const builtInPlugins: Plugin[] = [
   {
     id: 'common',
     name: 'common.md',
@@ -282,6 +290,24 @@ export const plugins: Plugin[] = [
     contentPreview: '# Client: Midnight\n\n- 톤: 기술적/간결. 개발자 대상 기본값.\n- 용어: shielded transactions, Compact DSL, Kachina 프로토콜.\n- 최근 로드맵: 메인넷 런칭, Glacier Drop, SDK 공개.\n',
   },
 ]
+
+// External skills sourced from Catalyze-Ax-Project/plugin repo.
+const externalSkillsAsPlugins: Plugin[] = externalSkills.map((s) => ({
+  id: s.id,
+  name: s.name,
+  kind: 'skill',
+  team: s.team,
+  description: s.core_value,
+  tags: s.tags ?? [],
+  updatedAt: s.updated_at,
+  skillsCount: 0,
+  discussionsCount: 0,
+  proposalsCount: 0,
+  adoptionCount: 0,
+  contentPreview: s.body.slice(0, 220),
+}))
+
+export const plugins: Plugin[] = [...builtInPlugins, ...externalSkillsAsPlugins]
 
 // ----------------------------------------------------------------------------
 // Discussions — 플러그인당 2~3개. 적어도 한 개는 resolved + linkedProposalId.
