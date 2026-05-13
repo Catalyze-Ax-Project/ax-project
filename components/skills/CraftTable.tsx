@@ -153,21 +153,17 @@ export function CraftTable({ plugins }: Props) {
             <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               카테고리
             </span>
-            {ACTION_TEAM_ORDER.map((t) => {
-              const count = actionTeamCounts.get(t) ?? 0
-              if (count === 0) return null
-              return (
-                <TeamChip
-                  key={t}
-                  label={TEAM_LABEL[t]}
-                  count={count}
-                  active={activeActionTeam === t}
-                  onClick={() =>
-                    setActiveActionTeam(activeActionTeam === t ? null : t)
-                  }
-                />
-              )
-            })}
+            {ACTION_TEAM_ORDER.map((t) => (
+              <TeamChip
+                key={t}
+                label={TEAM_LABEL[t]}
+                count={actionTeamCounts.get(t) ?? 0}
+                active={activeActionTeam === t}
+                onClick={() =>
+                  setActiveActionTeam(activeActionTeam === t ? null : t)
+                }
+              />
+            ))}
           </div>
         ) : null}
 
