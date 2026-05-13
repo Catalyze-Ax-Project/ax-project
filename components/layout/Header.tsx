@@ -2,7 +2,6 @@
 
 import { Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
-import { AdminToggle } from './AdminToggle'
 import { UserMenu } from './UserMenu'
 import { useSidebar } from '@/lib/sidebar-context'
 
@@ -51,11 +50,8 @@ export function Header({ user }: { user: HeaderUser | null }) {
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <AdminToggle />
         {user ? (
-          <div className="hidden items-center border-l border-border pl-3 sm:flex">
-            <UserMenu name={user.name} role={user.role} initials={user.initials} />
-          </div>
+          <UserMenu name={user.name} role={user.role} initials={user.initials} />
         ) : null}
       </div>
     </header>

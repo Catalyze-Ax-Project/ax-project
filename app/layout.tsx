@@ -6,7 +6,7 @@ import { SidebarProvider } from '@/lib/sidebar-context'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { Toaster } from '@/components/ui/sonner'
-import { getCurrentMember } from '@/lib/auth'
+import { getCurrentMember, isAdminSession } from '@/lib/auth'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -27,6 +27,7 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const member = await getCurrentMember()
+  const isAdmin = member ? await isAdminSession() : false
   const headerUser = member
     ? { name: member.name, role: member.role, initials: member.avatarInitials }
     : null
@@ -38,7 +39,7 @@ export default async function RootLayout({
     >
       <body className="min-h-screen bg-background text-foreground">
         {member ? (
-          <AdminProvider>
+          <AdminProvider initialIsAdmin={isAdmin}>
             <SidebarProvider>
               <div className="flex min-h-screen">
                 <Sidebar />
