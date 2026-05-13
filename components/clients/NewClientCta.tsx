@@ -2,10 +2,14 @@
 
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAdmin } from '@/lib/admin-context'
 
 type Variant = 'button' | 'card'
 
 export function NewClientCta({ variant = 'button' }: { variant?: Variant }) {
+  const { isAdmin } = useAdmin()
+  if (!isAdmin) return null
+
   const handleClick = () => {
     toast.info('새 고객사 세팅 플로우는 다음 단계에서 연결됩니다', {
       description: '톤앤매너 · 로드맵 · 연결할 Skills · 담당자를 단계별로 입력하는 위저드가 추가될 예정입니다.',
