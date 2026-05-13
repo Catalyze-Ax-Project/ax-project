@@ -217,7 +217,7 @@ const SEED_PROPOSALS: Proposal[] = [
     id: 'p-001',
     pluginId: 'slack-brief',
     title: 'Slack Brief: 발화자별 톤 보존 규칙 추가',
-    author: 'Harry Park',
+    author: 'Jun Lee',
     status: 'merged',
     createdAt: '2026-05-12T08:15:00.000Z',
     description:

@@ -107,9 +107,7 @@ function ProposalRow({ proposal, pluginName }: { proposal: Proposal; pluginName?
           {proposal.title}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-          <span className="font-mono">{proposal.id}</span>
-          <span>·</span>
-          <span className="font-mono">{pluginName}</span>
+          <span>{pluginName}</span>
           <span>·</span>
           <span>{proposal.author}</span>
           <span>·</span>
