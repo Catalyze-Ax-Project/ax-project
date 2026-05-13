@@ -175,8 +175,12 @@ const rawPlugins: Plugin[] = [...builtInPlugins, ...externalSkillsAsPlugins]
 
 // ----------------------------------------------------------------------------
 // Discussions / Proposals / Changes — globalThis 기반 mutable 저장소.
-// 데모 시드 1바퀴(d-001 → p-001 → c-001)로 시작하며, server actions에서
-// push/mutate하면 다음 SSR이 새 값을 본다. 새로고침/재시작 시 시드로 리셋.
+// 체험자가 한 바퀴를 직접 돌릴 수 있도록 3개 plugin에 서로 다른 진입 상태를
+// 둔다. 새로고침/재시작 시 시드로 리셋.
+//
+//   • slack-brief : 이미 한 바퀴 끝난 참조 사례 (d-001 → p-001 → c-001)
+//   • tg-brief    : open discussion 1건 → 체험자는 "제안 만들기 → 머지" 체험
+//   • hq-report   : 빈 상태 → 체험자는 "의견 등록 → 제안 → 머지" 풀 사이클 체험
 // ----------------------------------------------------------------------------
 
 type AxState = {
@@ -195,6 +199,15 @@ const SEED_DISCUSSIONS: Discussion[] = [
     status: 'resolved',
     commentsCount: 2,
     linkedProposalId: 'p-001',
+  },
+  {
+    id: 'd-002',
+    pluginId: 'tg-brief',
+    title: '텔레그램 핸들이 한글 닉네임일 때 인물 맵 매칭이 실패',
+    author: 'Jake Ku',
+    createdAt: '2026-05-12T06:00:00.000Z',
+    status: 'open',
+    commentsCount: 1,
   },
 ]
 
