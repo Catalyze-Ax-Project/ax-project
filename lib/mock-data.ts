@@ -84,7 +84,7 @@ export type Combo = {
 }
 
 export const TEAM_LABEL: Record<Team, string> = {
-  common: '전사 공통',
+  common: 'Common',
   bd: 'BD',
   marketing: 'Marketing',
   'dev-growth': 'Dev Growth',
@@ -117,6 +117,9 @@ export const DISCUSSION_STATUS_LABEL: Record<DiscussionStatus, string> = {
 // - externalSkills (plugin repo)에서 가져온 Skill을 합쳐 최종 `plugins`로 export
 // ----------------------------------------------------------------------------
 
+// 데모 스코프: client는 Ripple 하나로 좁힘. plugin md(clients/ripple.md)에서
+// 본문이 들어오므로 이 빌트인은 메타데이터만 비워둔 placeholder. dedupe 시
+// plugin md가 우선되어 본문은 그 쪽이 채운다.
 const builtInPlugins: Plugin[] = [
   {
     id: 'client-ripple',
@@ -129,33 +132,7 @@ const builtInPlugins: Plugin[] = [
     discussionsCount: 0,
     proposalsCount: 0,
     adoptionCount: 0,
-    contentPreview: '# Client: Ripple\n\n- 톤: 전문적/격식. 금융 기관 대상 커뮤니케이션 기본값.\n- 용어: XRP Ledger, RLUSD (USD 스테이블), Interledger Protocol, Ripple Payments.\n- 최근 로드맵: RLUSD 확장, 기관용 custody, 유럽 결제 라이선스.\n',
-  },
-  {
-    id: 'client-squid',
-    name: 'Squid',
-    kind: 'client',
-    team: 'operations',
-    description: '',
-    tags: ['클라이언트', 'Squid'],
-    updatedAt: '2026-04-10T05:55:00.000Z',
-    discussionsCount: 0,
-    proposalsCount: 0,
-    adoptionCount: 0,
-    contentPreview: '# Client: Squid\n\n크로스체인 리퀴디티 라우터. Axelar 기반.\n',
-  },
-  {
-    id: 'client-midnight',
-    name: 'Midnight',
-    kind: 'client',
-    team: 'operations',
-    description: '',
-    tags: ['클라이언트', 'Midnight', 'Privacy'],
-    updatedAt: '2026-04-12T07:30:00.000Z',
-    discussionsCount: 0,
-    proposalsCount: 0,
-    adoptionCount: 0,
-    contentPreview: '# Client: Midnight\n\n- 톤: 기술적/간결. 개발자 대상 기본값.\n- 용어: shielded transactions, Compact DSL, Kachina 프로토콜.\n- 최근 로드맵: 메인넷 런칭, Glacier Drop, SDK 공개.\n',
+    contentPreview: '',
   },
 ]
 
@@ -209,6 +186,8 @@ type AxState = {
   discussions: Discussion[]
   proposals: Proposal[]
   changes: Change[]
+  members: Member[]
+  memberAssignments: Record<string, string[]>
 }
 
 const SEED_DISCUSSIONS: Discussion[] = [
@@ -257,18 +236,37 @@ const SEED_CHANGES: Change[] = [
   },
 ]
 
-const _g = globalThis as unknown as { __ax?: AxState }
-if (!_g.__ax) {
-  _g.__ax = {
-    discussions: [...SEED_DISCUSSIONS],
-    proposals: [...SEED_PROPOSALS],
-    changes: [...SEED_CHANGES],
-  }
+const SEED_MEMBERS: Member[] = [
+  { id: 'u-jay', name: 'Jay Lee', team: 'operations', role: 'Co-Founder', weeklyUsage: 9, avatarInitials: 'JL' },
+  { id: 'u-harry', name: 'Harry Park', team: 'operations', role: 'Operation Manager', weeklyUsage: 14, avatarInitials: 'HP' },
+  { id: 'u-jayp', name: 'Jay Park', team: 'bd', role: 'BD Lead', weeklyUsage: 11, avatarInitials: 'JP' },
+  { id: 'u-jake', name: 'Jake Ku', team: 'dev-growth', role: 'Head of growth', weeklyUsage: 6, avatarInitials: 'JK' },
+  { id: 'u-jun', name: 'Jun Lee', team: 'dev-growth', role: 'Research Analyst', weeklyUsage: 12, avatarInitials: 'JL' },
+]
+
+const SEED_MEMBER_ASSIGNMENTS: Record<string, string[]> = {
+  'u-jay': ['catalyze-operations'],
+  'u-harry': ['catalyze-operations'],
+  'u-jayp': ['client-ripple'],
+  'u-jake': ['client-ripple'],
+  'u-jun': ['client-ripple'],
 }
 
-export const discussions: Discussion[] = _g.__ax.discussions
-export const proposals: Proposal[] = _g.__ax.proposals
-export const changes: Change[] = _g.__ax.changes
+const _g = globalThis as unknown as { __ax?: Partial<AxState> }
+if (!_g.__ax) _g.__ax = {}
+// dev hot-reload 사이에 _g.__ax가 살아남으므로, 새 필드는 개별 가드로 시드.
+if (!_g.__ax.discussions) _g.__ax.discussions = [...SEED_DISCUSSIONS]
+if (!_g.__ax.proposals) _g.__ax.proposals = [...SEED_PROPOSALS]
+if (!_g.__ax.changes) _g.__ax.changes = [...SEED_CHANGES]
+if (!_g.__ax.members) _g.__ax.members = [...SEED_MEMBERS]
+if (!_g.__ax.memberAssignments) {
+  _g.__ax.memberAssignments = { ...SEED_MEMBER_ASSIGNMENTS }
+}
+const _ax = _g.__ax as AxState
+
+export const discussions: Discussion[] = _ax.discussions
+export const proposals: Proposal[] = _ax.proposals
+export const changes: Change[] = _ax.changes
 
 // ----------------------------------------------------------------------------
 // 플러그인 카운트 재계산 — discussions/proposals/changes 길이로 채움.
@@ -283,16 +281,11 @@ export const plugins: Plugin[] = rawPlugins.map((p) => ({
 }))
 
 // ----------------------------------------------------------------------------
-// Members (5명).
+// Members — globalThis-backed mutable (시드는 SEED_MEMBERS 위에서 정의).
+// admin이 추가한 멤버는 서버 재시작 / dev hot-reload 전까지 유지.
 // ----------------------------------------------------------------------------
 
-export const members: Member[] = [
-  { id: 'u-jay', name: 'Jay Lee', team: 'operations', role: 'Co-Founder', weeklyUsage: 9, avatarInitials: 'JL' },
-  { id: 'u-harry', name: 'Harry Park', team: 'operations', role: 'Operation Manager', weeklyUsage: 14, avatarInitials: 'HP' },
-  { id: 'u-jayp', name: 'Jay Park', team: 'bd', role: 'BD Lead', weeklyUsage: 11, avatarInitials: 'JP' },
-  { id: 'u-jake', name: 'Jake Ku', team: 'dev-growth', role: 'Head of growth', weeklyUsage: 6, avatarInitials: 'JK' },
-  { id: 'u-jun', name: 'Jun Lee', team: 'dev-growth', role: 'Research Analyst', weeklyUsage: 12, avatarInitials: 'JL' },
-]
+export const members: Member[] = _ax.members
 
 // ----------------------------------------------------------------------------
 // Combos — 최근 사용 + 추천 조합 (Overview 카드용)
@@ -349,21 +342,7 @@ export const clientMetas: Record<string, ClientMeta> = {
     ownerId: 'u-jake',
     onboardedAt: '2026-01-15T00:00:00.000Z',
     linkedSkillIds: [],
-    tagline: 'Global Payments · XRP Ledger',
-  },
-  'client-midnight': {
-    pluginId: 'client-midnight',
-    ownerId: 'u-jayp',
-    onboardedAt: '2026-04-10T00:00:00.000Z',
-    linkedSkillIds: [],
-    tagline: 'Privacy Sidechain · Cardano 계열',
-  },
-  'client-squid': {
-    pluginId: 'client-squid',
-    ownerId: 'u-jayp',
-    onboardedAt: '2026-03-25T00:00:00.000Z',
-    linkedSkillIds: [],
-    tagline: 'Cross-chain Router · Axelar 기반',
+    tagline: 'Global Payments · XRP Ledger · XRPL Korea',
   },
 }
 
@@ -379,13 +358,7 @@ export const internalProjects: { id: string; name: string }[] = [
   { id: 'catalyze-operations', name: 'Catalyze Operation' },
 ]
 
-export const memberAssignments: Record<string, string[]> = {
-  'u-jay': ['catalyze-operations'],
-  'u-harry': ['catalyze-operations'],
-  'u-jayp': ['client-midnight', 'client-squid'],
-  'u-jake': ['client-ripple'],
-  'u-jun': ['client-ripple', 'client-midnight'],
-}
+export const memberAssignments: Record<string, string[]> = _ax.memberAssignments
 
 export type ProjectRef = {
   id: string
