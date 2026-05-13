@@ -20,15 +20,14 @@ import { HeroDonut } from './HeroDonut'
 const DONUT_COLORS = ['#ffffff', '#c7d2fe', '#a5b4fc', '#818cf8', '#6366f1']
 
 export function HeroBanner() {
-  const mergedThisWeek = changes.filter(
-    (c) => isWithinWeek(c.createdAt) && /반영/.test(c.message),
-  ).length
+  // changes는 머지된 결과 그 자체. 이번 주 머지 수 == 이번 주 changes 수.
+  const changesThisWeek = changes.filter((c) => isWithinWeek(c.createdAt)).length
+  const mergedThisWeek = changesThisWeek
 
   const discussionsThisWeek = discussions.filter((d) => isWithinWeek(d.createdAt)).length
   const openProposals = proposals.filter(
     (p) => p.status === 'open' || p.status === 'in-review',
   ).length
-  const changesThisWeek = changes.filter((c) => isWithinWeek(c.createdAt)).length
 
   // 채택 도넛: changes 수 기준으로 즉석 계산 (plugin.adoptionCount는 모듈 로드 시점 고정값이라 변경 후 stale)
   const adoptionByPlugin = new Map<string, number>()

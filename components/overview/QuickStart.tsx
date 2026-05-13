@@ -1,18 +1,25 @@
 import Link from 'next/link'
-import { ArrowRight, Clock, Sparkles, Plus, Copy } from 'lucide-react'
-import { combos, getPluginById, skillPlugins } from '@/lib/mock-data'
-import { formatRelative } from '@/lib/date-utils'
+import { ArrowRight, Sparkles, Plus, Copy } from 'lucide-react'
+import {
+  clientPlugins,
+  getPluginById,
+  memberAssignments,
+  skillPlugins,
+} from '@/lib/mock-data'
 import { getCurrentMember } from '@/lib/auth'
 
 export async function QuickStart() {
   const me = await getCurrentMember()
   if (!me) return null
 
-  const recentCombo = combos[0]
-  const recentClient = recentCombo ? getPluginById(recentCombo.clientId) : undefined
-  const recentSkill = recentCombo ? getPluginById(recentCombo.skillId) : undefined
+  // 추천 client: 본인 담당 client 중 첫 번째. 없으면 전체 client 중 첫 번째.
+  const myClientIds = (memberAssignments[me.id] ?? []).filter((id) =>
+    clientPlugins.some((c) => c.id === id),
+  )
+  const recommendedClient =
+    (myClientIds[0] ? getPluginById(myClientIds[0]) : undefined) ?? clientPlugins[0]
 
-  const recommendedClient = getPluginById('client-ripple')
+  // 추천 skill: team이 일치하는 것 우선, 없으면 first.
   const recommendedSkill =
     skillPlugins.find((p) => p.team === me.team) ?? skillPlugins[0]
 
@@ -25,26 +32,16 @@ export async function QuickStart() {
         </p>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {recentCombo && recentClient && recentSkill ? (
-          <QuickCard
-            icon={<Clock className="size-4" />}
-            tag="최근 쓴 조합"
-            title={`${recentClient.name} × ${recentSkill.name}`}
-            description={`마지막 사용 ${formatRelative(recentCombo.lastUsedAt)}`}
-            action={
-              <button className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
-                <Copy className="size-3.5" />
-                다시 사용
-              </button>
-            }
-          />
-        ) : null}
         {recommendedClient && recommendedSkill ? (
           <QuickCard
             icon={<Sparkles className="size-4" />}
             tag={`${me.role} 추천`}
             title={`${recommendedClient.name} × ${recommendedSkill.name}`}
-            description="역할과 최근 활동 패턴을 바탕으로 추천된 조합입니다."
+            description={
+              myClientIds.length > 0
+                ? '담당 클라이언트와 팀 기본 스킬을 조합한 추천입니다.'
+                : '팀 기본 스킬과 첫 클라이언트의 조합입니다.'
+            }
             action={
               <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted">
                 <Copy className="size-3.5" />
