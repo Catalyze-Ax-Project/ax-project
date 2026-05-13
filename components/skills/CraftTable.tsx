@@ -10,7 +10,13 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
-import { KIND_LABEL, type Plugin, type PluginKind } from '@/lib/mock-data'
+import {
+  KIND_LABEL,
+  TEAM_LABEL,
+  type Plugin,
+  type PluginKind,
+  type Team,
+} from '@/lib/mock-data'
 
 type Props = {
   plugins: Plugin[]
@@ -21,9 +27,15 @@ const KIND_ORDER: PluginKind[] = ['client', 'context', 'action']
 // 마켓 좌측에 노출할 kind. agent는 미구현, common은 우리 데이터에 아직 없음.
 const VISIBLE_KINDS = new Set<PluginKind>(['client', 'context', 'action'])
 
+// Action 카테고리(=직무) 순서. 'common'은 전사 공통 액션이라 맨 앞.
+const ACTION_TEAM_ORDER: Team[] = ['common', 'bd', 'dev-growth', 'marketing', 'operations']
+
 export function CraftTable({ plugins }: Props) {
   const [query, setQuery] = useState('')
-  const [activeKind, setActiveKind] = useState<PluginKind | null>(null)
+  // 조립은 client → context → action 순서. 디폴트는 client부터.
+  const [activeKind, setActiveKind] = useState<PluginKind>('client')
+  // Action 단계 진입 시에만 의미 있는 카테고리(직무) 필터. null이면 전체.
+  const [activeActionTeam, setActiveActionTeam] = useState<Team | null>(null)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [copied, setCopied] = useState(false)
 
@@ -32,14 +44,27 @@ export function CraftTable({ plugins }: Props) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return market.filter((p) => {
-      if (activeKind && p.kind !== activeKind) return false
+      if (p.kind !== activeKind) return false
+      if (activeKind === 'action' && activeActionTeam && p.team !== activeActionTeam) {
+        return false
+      }
       if (!q) return true
       const hay = [p.name, p.description, ...(p.tags ?? [])]
         .join(' ')
         .toLowerCase()
       return hay.includes(q)
     })
-  }, [market, query, activeKind])
+  }, [market, query, activeKind, activeActionTeam])
+
+  // Action 카테고리별 카운트.
+  const actionTeamCounts = useMemo(() => {
+    const m = new Map<Team, number>()
+    for (const p of market) {
+      if (p.kind !== 'action') continue
+      m.set(p.team, (m.get(p.team) ?? 0) + 1)
+    }
+    return m
+  }, [market])
 
   const selected = useMemo(
     () =>
@@ -111,23 +136,40 @@ export function CraftTable({ plugins }: Props) {
           />
         </div>
 
-        <div className="mb-3 flex flex-wrap gap-1.5">
-          <KindChip
-            label="전체"
-            count={market.length}
-            active={activeKind === null}
-            onClick={() => setActiveKind(null)}
-          />
+        <div className="mb-2 flex flex-wrap gap-1.5">
           {KIND_ORDER.map((k) => (
             <KindChip
               key={k}
               label={KIND_LABEL[k]}
               count={kindCounts.get(k) ?? 0}
               active={activeKind === k}
-              onClick={() => setActiveKind(activeKind === k ? null : k)}
+              onClick={() => setActiveKind(k)}
             />
           ))}
         </div>
+
+        {activeKind === 'action' ? (
+          <div className="mb-3 flex flex-wrap items-center gap-1.5 border-l-2 border-primary/30 pl-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              카테고리
+            </span>
+            {ACTION_TEAM_ORDER.map((t) => {
+              const count = actionTeamCounts.get(t) ?? 0
+              if (count === 0) return null
+              return (
+                <TeamChip
+                  key={t}
+                  label={TEAM_LABEL[t]}
+                  count={count}
+                  active={activeActionTeam === t}
+                  onClick={() =>
+                    setActiveActionTeam(activeActionTeam === t ? null : t)
+                  }
+                />
+              )
+            })}
+          </div>
+        ) : null}
 
         <ul className="max-h-[560px] space-y-2 overflow-y-auto pr-1">
           {filtered.length === 0 ? (
@@ -163,7 +205,7 @@ export function CraftTable({ plugins }: Props) {
                           {KIND_LABEL[p.kind]}
                         </span>
                       </div>
-                      <div className="mt-1 truncate font-mono text-sm font-semibold">{p.name}</div>
+                      <div className="mt-1 truncate text-sm font-semibold">{p.name}</div>
                       {p.description ? (
                         <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">
                           {p.description}
@@ -222,7 +264,7 @@ export function CraftTable({ plugins }: Props) {
                     <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground/70">
                       {KIND_LABEL[p.kind]}
                     </span>
-                    <span className="min-w-0 flex-1 truncate font-mono text-sm">{p.name}</span>
+                    <span className="min-w-0 flex-1 truncate text-sm">{p.name}</span>
                     <button
                       type="button"
                       onClick={() => toggle(p.id)}
@@ -300,6 +342,33 @@ function KindChip({
     >
       {label}
       <span className="tabular-nums text-[10px] opacity-70">{count}</span>
+    </button>
+  )
+}
+
+function TeamChip({
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  label: string
+  count: number
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        active
+          ? 'inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground'
+          : 'inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] text-foreground/80 hover:bg-muted/70'
+      }
+    >
+      {label}
+      <span className="tabular-nums text-[9px] opacity-70">{count}</span>
     </button>
   )
 }

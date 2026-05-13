@@ -28,7 +28,7 @@ export function ClientCard({ plugin, meta, memberTotal, openProposals }: Props) 
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="text-xs text-muted-foreground">{meta.tagline}</div>
-            <h3 className="mt-1 font-mono text-lg font-semibold">{plugin.name}</h3>
+            <h3 className="mt-1 text-lg font-semibold">{plugin.name}</h3>
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{plugin.description}</p>
           </div>
           <Link

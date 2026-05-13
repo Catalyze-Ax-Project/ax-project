@@ -43,7 +43,7 @@ export function PluginDetailLayout({ plugin, backHref, backLabel, headerSlot }: 
             <span>·</span>
             <span>{TEAM_LABEL[plugin.team]}</span>
           </div>
-          <h2 className="mt-2 font-mono text-2xl font-semibold tracking-tight">{plugin.name}</h2>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight">{plugin.name}</h2>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{plugin.description}</p>
           {plugin.tags && plugin.tags.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-1.5">

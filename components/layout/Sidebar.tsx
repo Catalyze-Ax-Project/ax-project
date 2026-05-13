@@ -45,7 +45,8 @@ const SECTIONS: NavSection[] = [
       { href: '/', label: 'Overview', icon: LayoutDashboard },
       { href: '/clients', label: 'Clients', icon: Briefcase },
       { href: '/skills', label: 'Skills', icon: Sparkles },
-      { href: '/agents', label: 'Agents', icon: Bot, comingSoon: true },
+      // 데모 스코프 외. 라우트는 살아있고 사이드바에서만 숨김.
+      // { href: '/agents', label: 'Agents', icon: Bot, comingSoon: true },
     ],
   },
   {

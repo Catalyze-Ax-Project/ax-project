@@ -14,7 +14,8 @@ const VISIBLE_KINDS = new Set<PluginKind>(['client', 'context', 'action'])
 
 export function PluginsMarket({ plugins }: Props) {
   const [query, setQuery] = useState('')
-  const [activeKind, setActiveKind] = useState<PluginKind | null>(null)
+  // 디폴트로 client 카테고리부터.
+  const [activeKind, setActiveKind] = useState<PluginKind>('client')
   const [activeTag, setActiveTag] = useState<string | null>(null)
 
   const market = useMemo(
@@ -30,7 +31,7 @@ export function PluginsMarket({ plugins }: Props) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return market.filter((p) => {
-      if (activeKind && p.kind !== activeKind) return false
+      if (p.kind !== activeKind) return false
       if (activeTag && !(p.tags ?? []).includes(activeTag)) return false
       if (!q) return true
       const hay = [p.name, p.description, ...(p.tags ?? [])]
@@ -64,20 +65,13 @@ export function PluginsMarket({ plugins }: Props) {
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        <Chip
-          label="전체"
-          count={market.length}
-          active={activeKind === null}
-          onClick={() => setActiveKind(null)}
-          emphasized
-        />
         {KIND_ORDER.map((k) => (
           <Chip
             key={k}
             label={KIND_LABEL[k]}
             count={kindCounts.get(k) ?? 0}
             active={activeKind === k}
-            onClick={() => setActiveKind(activeKind === k ? null : k)}
+            onClick={() => setActiveKind(k)}
             emphasized
           />
         ))}

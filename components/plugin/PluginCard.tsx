@@ -25,7 +25,7 @@ export function PluginCard({ plugin, href }: PluginCardProps) {
             <span>·</span>
             <span>{TEAM_LABEL[plugin.team]}</span>
           </div>
-          <div className="mt-2 truncate font-mono text-sm font-semibold text-foreground">
+          <div className="mt-2 truncate text-sm font-semibold text-foreground">
             {plugin.name}
           </div>
         </div>

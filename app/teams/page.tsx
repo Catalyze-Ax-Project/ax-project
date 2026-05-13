@@ -45,9 +45,6 @@ export default function TeamsPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Teams</h2>
-        <p className="text-sm text-muted-foreground">
-          각 팀은 해당 팀의 업무를 담당하고 있습니다.
-        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

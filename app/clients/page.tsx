@@ -31,9 +31,6 @@ export default function ClientsPage() {
             Client Hub
           </div>
           <h2 className="text-2xl font-semibold tracking-tight">Clients</h2>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            고객사의 KPI, Roadmap, 연결할 Skills, 내부 담당자 및 관련 정보를 한 곳에서 관리하세요.
-          </p>
         </div>
         <NewClientCta />
       </div>
