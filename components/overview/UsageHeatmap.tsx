@@ -10,21 +10,23 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { members, currentUser } from '@/lib/mock-data'
+import { members } from '@/lib/mock-data'
 
 const ACCENT = '#2563eb'
 const BASE = '#cbd5e1'
 
-export function UsageHeatmap() {
+export function UsageHeatmap({ currentMemberId }: { currentMemberId: string }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
+  const currentName =
+    members.find((m) => m.id === currentMemberId)?.name ?? ''
   const sorted = [...members].sort((a, b) => b.weeklyUsage - a.weeklyUsage)
   const data = sorted.map((m) => ({
     name: m.name.split(' ')[0],
     full: m.name,
     usage: m.weeklyUsage,
-    isCurrent: m.id === currentUser.id,
+    isCurrent: m.id === currentMemberId,
   }))
   const total = members.reduce((s, m) => s + m.weeklyUsage, 0)
   const avg = Math.round((total / members.length) * 10) / 10
@@ -83,7 +85,7 @@ export function UsageHeatmap() {
       <div className="mt-2 flex items-center gap-4 text-xs">
         <span className="inline-flex items-center gap-1.5">
           <span className="size-2 rounded-sm" style={{ background: ACCENT }} />
-          <span className="text-muted-foreground">내 위치 ({currentUser.name})</span>
+          <span className="text-muted-foreground">내 위치 ({currentName})</span>
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="size-2 rounded-sm" style={{ background: BASE }} />

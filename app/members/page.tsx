@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import {
-  currentUser,
   getMemberProjects,
   members,
   TEAM_LABEL,
 } from '@/lib/mock-data'
+import { getCurrentMember } from '@/lib/auth'
 
-export default function MembersPage() {
+export default async function MembersPage() {
+  const me = await getCurrentMember()
   const rows = members.map((m) => ({
     ...m,
     projects: getMemberProjects(m.id),
@@ -36,7 +37,7 @@ export default function MembersPage() {
           </thead>
           <tbody>
             {rows.map((m) => {
-              const isCurrent = m.id === currentUser.id
+              const isCurrent = m.id === me?.id
               return (
                 <tr
                   key={m.id}

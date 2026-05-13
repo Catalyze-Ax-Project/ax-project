@@ -3,7 +3,7 @@
 import { Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { AdminToggle } from './AdminToggle'
-import { currentUser } from '@/lib/mock-data'
+import { UserMenu } from './UserMenu'
 import { useSidebar } from '@/lib/sidebar-context'
 
 const TITLES: Record<string, string> = {
@@ -23,7 +23,13 @@ function resolveTitle(pathname: string): string {
   return TITLES[prefix] ?? 'Harness'
 }
 
-export function Header() {
+type HeaderUser = {
+  name: string
+  role: string
+  initials: string
+}
+
+export function Header({ user }: { user: HeaderUser | null }) {
   const pathname = usePathname()
   const { toggle } = useSidebar()
   const title = resolveTitle(pathname)
@@ -46,18 +52,11 @@ export function Header() {
       </div>
       <div className="flex items-center gap-3">
         <AdminToggle />
-        <div className="hidden items-center gap-2 border-l border-border pl-3 sm:flex">
-          <div className="grid size-8 place-items-center rounded-full bg-muted text-xs font-semibold text-foreground">
-            {currentUser.name
-              .split(' ')
-              .map((s) => s[0])
-              .join('')}
+        {user ? (
+          <div className="hidden items-center border-l border-border pl-3 sm:flex">
+            <UserMenu name={user.name} role={user.role} initials={user.initials} />
           </div>
-          <div className="text-sm leading-tight">
-            <div className="font-medium">{currentUser.name}</div>
-            <div className="text-xs text-muted-foreground">{currentUser.role}</div>
-          </div>
-        </div>
+        ) : null}
       </div>
     </header>
   )

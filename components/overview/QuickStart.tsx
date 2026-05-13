@@ -1,23 +1,27 @@
 import Link from 'next/link'
 import { ArrowRight, Clock, Sparkles, Plus, Copy } from 'lucide-react'
-import { combos, currentUser, getPluginById, skillPlugins } from '@/lib/mock-data'
+import { combos, getPluginById, skillPlugins } from '@/lib/mock-data'
 import { formatRelative } from '@/lib/date-utils'
+import { getCurrentMember } from '@/lib/auth'
 
-export function QuickStart() {
+export async function QuickStart() {
+  const me = await getCurrentMember()
+  if (!me) return null
+
   const recentCombo = combos[0]
   const recentClient = recentCombo ? getPluginById(recentCombo.clientId) : undefined
   const recentSkill = recentCombo ? getPluginById(recentCombo.skillId) : undefined
 
   const recommendedClient = getPluginById('client-ripple')
   const recommendedSkill =
-    skillPlugins.find((p) => p.team === currentUser.team) ?? skillPlugins[0]
+    skillPlugins.find((p) => p.team === me.team) ?? skillPlugins[0]
 
   return (
     <section>
       <div className="mb-3 flex items-end justify-between">
         <h3 className="text-lg font-semibold">빠른 시작</h3>
         <p className="text-xs text-muted-foreground">
-          {currentUser.name} · {currentUser.role}
+          {me.name} · {me.role}
         </p>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -38,7 +42,7 @@ export function QuickStart() {
         {recommendedClient && recommendedSkill ? (
           <QuickCard
             icon={<Sparkles className="size-4" />}
-            tag={`${currentUser.role} 추천`}
+            tag={`${me.role} 추천`}
             title={`${recommendedClient.name} × ${recommendedSkill.name}`}
             description="역할과 최근 활동 패턴을 바탕으로 추천된 조합입니다."
             action={

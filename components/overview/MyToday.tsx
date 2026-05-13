@@ -1,26 +1,18 @@
 import Link from 'next/link'
 import {
   changes,
-  currentUser,
   discussions,
-  getMemberById,
   getMemberProjects,
   memberAssignments,
   proposals,
 } from '@/lib/mock-data'
 import { isWithinWeek } from '@/lib/date-utils'
+import { getCurrentMember } from '@/lib/auth'
 
-export function MyToday() {
-  const me = currentUser
-  const meMember = getMemberById(me.id)
-  const initials =
-    meMember?.avatarInitials ??
-    me.name
-      .split(' ')
-      .map((s) => s[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase()
+export async function MyToday() {
+  const me = await getCurrentMember()
+  if (!me) return null
+  const initials = me.avatarInitials
   const projects = getMemberProjects(me.id)
   const myProjectIds = memberAssignments[me.id] ?? []
 
