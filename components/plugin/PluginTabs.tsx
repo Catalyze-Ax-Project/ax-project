@@ -4,6 +4,7 @@ import { BookOpen, FileCode2, GitCommit, GitPullRequestArrow, MessagesSquare, Pe
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DiscussionThread } from './DiscussionThread'
+import { NewDiscussionForm } from './NewDiscussionForm'
 import { ProposalItem } from './ProposalItem'
 import { ChangeTimeline } from './ChangeTimeline'
 import { formatRelative } from '@/lib/date-utils'
@@ -141,15 +142,25 @@ export function PluginTabs({ plugin, discussions, proposals, changes, memberTota
 
       {/* Discussions */}
       <TabsContent value="discussions" keepMounted className="mt-5 space-y-3">
+        <NewDiscussionForm pluginId={plugin.id} />
         {discussions.length === 0 ? (
           <EmptyHint label="아직 등록된 의견이 없습니다." />
         ) : (
           <ul className="space-y-3">
-            {discussions.map((d) => (
-              <li key={d.id}>
-                <DiscussionThread discussion={d} isAdmin={isAdmin} />
-              </li>
-            ))}
+            {discussions.map((d) => {
+              const linked = d.linkedProposalId
+                ? proposals.find((p) => p.id === d.linkedProposalId)
+                : undefined
+              return (
+                <li key={d.id}>
+                  <DiscussionThread
+                    discussion={d}
+                    linkedProposal={linked}
+                    isAdmin={isAdmin}
+                  />
+                </li>
+              )
+            })}
           </ul>
         )}
       </TabsContent>

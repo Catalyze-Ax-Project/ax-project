@@ -8,6 +8,7 @@
 // ============================================================================
 
 import { externalSkills } from './plugins-data'
+import { isWithinWeek } from './date-utils'
 
 export type Team = 'common' | 'bd' | 'marketing' | 'dev-growth' | 'operations'
 export type PluginKind = 'client' | 'skill' | 'agent' | 'common'
@@ -73,18 +74,6 @@ export type Combo = {
   clientId: string
   skillId: string
   lastUsedAt: string
-}
-
-export const currentUser: {
-  id: string
-  name: string
-  team: Team
-  role: string
-} = {
-  id: 'u-jun',
-  name: 'Jun Lee',
-  team: 'dev-growth',
-  role: 'Researcher',
 }
 
 export const TEAM_LABEL: Record<Team, string> = {
@@ -166,6 +155,7 @@ const builtInPlugins: Plugin[] = [
 ]
 
 // External skills sourced from Catalyze-Ax-Project/plugin repo.
+// 카운트는 아래에서 discussions/proposals/changes 길이로 다시 계산해 채움.
 const externalSkillsAsPlugins: Plugin[] = externalSkills.map((s) => ({
   id: s.id,
   name: s.name,
@@ -181,23 +171,84 @@ const externalSkillsAsPlugins: Plugin[] = externalSkills.map((s) => ({
   contentPreview: s.body,
 }))
 
-export const plugins: Plugin[] = [...builtInPlugins, ...externalSkillsAsPlugins]
+const rawPlugins: Plugin[] = [...builtInPlugins, ...externalSkillsAsPlugins]
 
 // ----------------------------------------------------------------------------
-// Discussions / Proposals / Changes / Combos — 모두 비움.
-// 시연 더미 데이터를 제거. 실제 활동은 외부 plugin repo에서 들어오거나
-// 사용자가 추가하면서 채워질 예정.
+// Discussions / Proposals / Changes — globalThis 기반 mutable 저장소.
+// 데모 시드 1바퀴(d-001 → p-001 → c-001)로 시작하며, server actions에서
+// push/mutate하면 다음 SSR이 새 값을 본다. 새로고침/재시작 시 시드로 리셋.
 // ----------------------------------------------------------------------------
 
-export const discussions: Discussion[] = []
+type AxState = {
+  discussions: Discussion[]
+  proposals: Proposal[]
+  changes: Change[]
+}
 
-export const proposals: Proposal[] = []
+const SEED_DISCUSSIONS: Discussion[] = [
+  {
+    id: 'd-001',
+    pluginId: 'slack-brief',
+    title: '슬랙 요약 시 발화자 톤이 너무 평탄하게 정리됨',
+    author: 'Jay Park',
+    createdAt: '2026-05-11T02:30:00.000Z',
+    status: 'resolved',
+    commentsCount: 2,
+    linkedProposalId: 'p-001',
+  },
+]
 
-export const changes: Change[] = []
+const SEED_PROPOSALS: Proposal[] = [
+  {
+    id: 'p-001',
+    pluginId: 'slack-brief',
+    title: 'Slack Brief: 발화자별 톤 보존 규칙 추가',
+    author: 'Harry Park',
+    status: 'merged',
+    createdAt: '2026-05-12T08:15:00.000Z',
+    description:
+      'd-001 의견 반영. 발화자별 어투(존댓말/반말/이모지 등)를 요약 결과에 보존하도록 출력 템플릿과 분석 규칙 보강.',
+    linkedDiscussionId: 'd-001',
+  },
+]
 
+const SEED_CHANGES: Change[] = [
+  {
+    id: 'c-001',
+    pluginId: 'slack-brief',
+    message: 'Slack Brief: 발화자별 톤 보존 룰 반영 (p-001)',
+    author: 'Jun Lee',
+    createdAt: '2026-05-13T01:00:00.000Z',
+  },
+]
+
+const _g = globalThis as unknown as { __ax?: AxState }
+if (!_g.__ax) {
+  _g.__ax = {
+    discussions: [...SEED_DISCUSSIONS],
+    proposals: [...SEED_PROPOSALS],
+    changes: [...SEED_CHANGES],
+  }
+}
+
+export const discussions: Discussion[] = _g.__ax.discussions
+export const proposals: Proposal[] = _g.__ax.proposals
+export const changes: Change[] = _g.__ax.changes
 
 // ----------------------------------------------------------------------------
-// Members (5명). currentUser = Jun Lee.
+// 플러그인 카운트 재계산 — discussions/proposals/changes 길이로 채움.
+// adoptionCount는 changes(머지된 반영) 수를 채택 지표로 사용.
+// ----------------------------------------------------------------------------
+
+export const plugins: Plugin[] = rawPlugins.map((p) => ({
+  ...p,
+  discussionsCount: discussions.filter((d) => d.pluginId === p.id).length,
+  proposalsCount: proposals.filter((pr) => pr.pluginId === p.id).length,
+  adoptionCount: changes.filter((c) => c.pluginId === p.id).length,
+}))
+
+// ----------------------------------------------------------------------------
+// Members (5명).
 // ----------------------------------------------------------------------------
 
 export const members: Member[] = [
@@ -219,7 +270,7 @@ export const combos: Combo[] = []
 // ----------------------------------------------------------------------------
 
 export const weeklyStats = {
-  mergedChanges: 0,
+  mergedChanges: changes.filter((c) => isWithinWeek(c.createdAt)).length,
   openDiscussions: discussions.filter((d) => d.status === 'open').length,
   openProposals: proposals.filter((p) => p.status === 'open' || p.status === 'in-review').length,
   staleDiscussions: 0,

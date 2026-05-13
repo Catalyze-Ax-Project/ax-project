@@ -1,6 +1,3 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import {
   Bot,
   GitCommit,
@@ -9,7 +6,6 @@ import {
   Puzzle,
   Sparkles,
 } from 'lucide-react'
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import {
   changes,
   discussions,
@@ -19,6 +15,7 @@ import {
   skillPlugins,
 } from '@/lib/mock-data'
 import { isWithinWeek } from '@/lib/date-utils'
+import { HeroDonut } from './HeroDonut'
 
 const DONUT_COLORS = ['#ffffff', '#c7d2fe', '#a5b4fc', '#818cf8', '#6366f1']
 
@@ -32,6 +29,21 @@ export function HeroBanner() {
     (p) => p.status === 'open' || p.status === 'in-review',
   ).length
   const changesThisWeek = changes.filter((c) => isWithinWeek(c.createdAt)).length
+
+  // 채택 도넛: changes 수 기준으로 즉석 계산 (plugin.adoptionCount는 모듈 로드 시점 고정값이라 변경 후 stale)
+  const adoptionByPlugin = new Map<string, number>()
+  for (const c of changes) {
+    adoptionByPlugin.set(c.pluginId, (adoptionByPlugin.get(c.pluginId) ?? 0) + 1)
+  }
+  const top = [...plugins]
+    .map((p) => ({ ...p, adoptionLive: adoptionByPlugin.get(p.id) ?? 0 }))
+    .sort((a, b) => b.adoptionLive - a.adoptionLive)
+    .slice(0, 5)
+  const donutData = top.map((p, i) => ({
+    name: p.name,
+    value: p.adoptionLive,
+    color: DONUT_COLORS[i],
+  }))
 
   return (
     <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/95 via-primary to-primary/80 p-8 text-primary-foreground shadow-sm">
@@ -87,7 +99,7 @@ export function HeroBanner() {
           </div>
         </div>
         <div className="min-h-[320px] lg:col-span-1">
-          <HeroAdoptionDonut />
+          <HeroDonut data={donutData} denominator={members.length} />
         </div>
       </div>
     </section>
@@ -125,73 +137,6 @@ function HeroStat({
         ) : null}
       </div>
       <div className="shrink-0 text-lg font-semibold tabular-nums">{value}</div>
-    </div>
-  )
-}
-
-function HeroAdoptionDonut() {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-
-  const top = [...plugins].sort((a, b) => b.adoptionCount - a.adoptionCount).slice(0, 5)
-  const data = top.map((p, i) => ({
-    name: p.name,
-    value: p.adoptionCount,
-    color: DONUT_COLORS[i],
-  }))
-  const denominator = members.length
-
-  return (
-    <div className="flex h-full flex-col rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur">
-      <div className="mb-3 text-sm font-semibold">Plugin Adoption</div>
-
-      <div className="relative min-h-[160px] flex-1">
-        {mounted ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius="55%"
-                outerRadius="88%"
-                paddingAngle={2}
-                dataKey="value"
-                stroke="none"
-              >
-                {data.map((d, i) => (
-                  <Cell key={i} fill={d.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  fontSize: 11,
-                  borderRadius: 8,
-                  background: '#ffffff',
-                  color: '#0f172a',
-                  border: '1px solid #e2e8f0',
-                }}
-                formatter={(v, _n, item) => {
-                  const name = (item?.payload as { name: string } | undefined)?.name
-                  return [`${v}/${denominator}`, name ?? '']
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        ) : null}
-      </div>
-
-      <ul className="mt-4 space-y-1 text-[11px]">
-        {data.map((d) => (
-          <li key={d.name} className="flex items-center gap-1.5">
-            <span className="size-2 shrink-0 rounded-full" style={{ background: d.color }} />
-            <span className="flex-1 truncate font-mono text-primary-foreground/90">{d.name}</span>
-            <span className="shrink-0 tabular-nums text-primary-foreground/70">
-              {d.value}/{denominator}
-            </span>
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }

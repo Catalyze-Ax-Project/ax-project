@@ -4,8 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
   PROPOSAL_STATUS_LABEL,
-  getPluginById,
-  proposals as allProposals,
+  type Plugin,
   type Proposal,
   type ProposalStatus,
 } from '@/lib/mock-data'
@@ -27,21 +26,26 @@ const STATUS_TONE: Record<ProposalStatus, string> = {
   closed: 'bg-slate-200 text-slate-700',
 }
 
-export function ProposalsList() {
+type Props = {
+  proposals: Proposal[]
+  pluginById: Record<string, { id: string; name: string; kind: Plugin['kind'] }>
+}
+
+export function ProposalsList({ proposals: allProposals, pluginById }: Props) {
   const [filter, setFilter] = useState<Filter>('all')
 
   const counts = useMemo(() => {
     const map: Record<Filter, number> = { all: allProposals.length, open: 0, 'in-review': 0, merged: 0, closed: 0 }
     for (const p of allProposals) map[p.status] += 1
     return map
-  }, [])
+  }, [allProposals])
 
   const filtered = useMemo(
     () =>
       [...allProposals]
         .filter((p) => filter === 'all' || p.status === filter)
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [filter],
+    [filter, allProposals],
   )
 
   return (
@@ -83,7 +87,7 @@ export function ProposalsList() {
               key={p.id}
               className={idx === filtered.length - 1 ? '' : 'border-b border-border'}
             >
-              <ProposalRow proposal={p} />
+              <ProposalRow proposal={p} pluginName={pluginById[p.pluginId]?.name} />
             </li>
           ))}
         </ul>
@@ -92,8 +96,7 @@ export function ProposalsList() {
   )
 }
 
-function ProposalRow({ proposal }: { proposal: Proposal }) {
-  const plugin = getPluginById(proposal.pluginId)
+function ProposalRow({ proposal, pluginName }: { proposal: Proposal; pluginName?: string }) {
   return (
     <Link
       href={`/proposals/${proposal.id}`}
@@ -106,7 +109,7 @@ function ProposalRow({ proposal }: { proposal: Proposal }) {
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
           <span className="font-mono">{proposal.id}</span>
           <span>·</span>
-          <span className="font-mono">{plugin?.name}</span>
+          <span className="font-mono">{pluginName}</span>
           <span>·</span>
           <span>{proposal.author}</span>
           <span>·</span>
