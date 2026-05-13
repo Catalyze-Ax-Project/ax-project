@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
-import { KIND_LABEL, TEAM_LABEL, type Plugin } from '@/lib/mock-data'
+import { KIND_LABEL, TEAM_LABEL, getPluginHref, type Plugin } from '@/lib/mock-data'
 import { formatRelative } from '@/lib/date-utils'
 
 type PluginCardProps = {
@@ -9,7 +9,7 @@ type PluginCardProps = {
 }
 
 export function PluginCard({ plugin, href }: PluginCardProps) {
-  const targetHref = href ?? `/plugins/${plugin.id}`
+  const targetHref = href ?? getPluginHref(plugin)
 
   return (
     <Link
@@ -43,9 +43,9 @@ export function PluginCard({ plugin, href }: PluginCardProps) {
 
       <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
         <div className="flex items-center gap-1">
-          <StatBadge letter="S" count={plugin.skillsCount} title={`연결된 Skills ${plugin.skillsCount}`} />
           <StatBadge letter="D" count={plugin.discussionsCount} title={`의견 ${plugin.discussionsCount}`} />
           <StatBadge letter="P" count={plugin.proposalsCount} title={`제안 ${plugin.proposalsCount}`} />
+          <StatBadge letter="C" count={plugin.adoptionCount} title={`반영(Changes) ${plugin.adoptionCount}`} />
         </div>
         <div className="text-[11px] text-muted-foreground">
           {formatRelative(plugin.updatedAt)}

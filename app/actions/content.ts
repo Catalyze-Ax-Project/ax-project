@@ -31,7 +31,6 @@ function pluginRoutes(pluginId: string): string[] {
   const plugin = getPluginById(pluginId)
   if (!plugin) return ['/plugins']
   if (plugin.kind === 'client') return ['/clients', `/clients/${pluginId}`]
-  if (plugin.kind === 'skill') return ['/skills', `/skills/${pluginId}`]
   return ['/plugins', `/plugins/${pluginId}`]
 }
 

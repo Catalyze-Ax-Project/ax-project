@@ -11,7 +11,14 @@ import { externalSkills } from './plugins-data'
 import { isWithinWeek } from './date-utils'
 
 export type Team = 'common' | 'bd' | 'marketing' | 'dev-growth' | 'operations'
-export type PluginKind = 'client' | 'skill' | 'agent' | 'common'
+// kind 컨셉 (2026-05-13 개편):
+//   client  — 고객사 맥락 저장소
+//   context — 행사·캠페인·시즌 등 시간/주제 맥락 (신규)
+//   action  — 재사용 작업 playbook (구 'skill')
+//   common  — 전사 공통 가이드
+//   agent   — 자동 실행 (미구현)
+// Skill(대문자)은 더 이상 plugin kind가 아니라, 사용자가 plugin들을 즉석 조립한 레시피.
+export type PluginKind = 'client' | 'context' | 'action' | 'agent' | 'common'
 export type ProposalStatus = 'open' | 'in-review' | 'merged' | 'closed'
 export type DiscussionStatus = 'open' | 'resolved'
 
@@ -23,7 +30,7 @@ export type Plugin = {
   description: string
   tags?: string[]
   updatedAt: string
-  skillsCount: number
+  linkedClients?: string[]
   discussionsCount: number
   proposalsCount: number
   adoptionCount: number
@@ -87,7 +94,8 @@ export const TEAM_LABEL: Record<Team, string> = {
 export const KIND_LABEL: Record<PluginKind, string> = {
   common: 'Common',
   client: 'Client',
-  skill: 'Skill',
+  context: 'Context',
+  action: 'Action',
   agent: 'Agent',
 }
 
@@ -118,7 +126,6 @@ const builtInPlugins: Plugin[] = [
     description: '',
     tags: ['클라이언트', 'Ripple', 'Payments'],
     updatedAt: '2026-04-17T15:24:00.000Z',
-    skillsCount: 0,
     discussionsCount: 0,
     proposalsCount: 0,
     adoptionCount: 0,
@@ -132,7 +139,6 @@ const builtInPlugins: Plugin[] = [
     description: '',
     tags: ['클라이언트', 'Squid'],
     updatedAt: '2026-04-10T05:55:00.000Z',
-    skillsCount: 0,
     discussionsCount: 0,
     proposalsCount: 0,
     adoptionCount: 0,
@@ -146,7 +152,6 @@ const builtInPlugins: Plugin[] = [
     description: '',
     tags: ['클라이언트', 'Midnight', 'Privacy'],
     updatedAt: '2026-04-12T07:30:00.000Z',
-    skillsCount: 0,
     discussionsCount: 0,
     proposalsCount: 0,
     adoptionCount: 0,
@@ -154,17 +159,27 @@ const builtInPlugins: Plugin[] = [
   },
 ]
 
-// External skills sourced from Catalyze-Ax-Project/plugin repo.
+// linked_clients 정규화: plugin md에 short id("ripple")로 적혀 있어도
+// 우리 내부 표기는 "client-ripple". 자동 prefix.
+function normalizeClientId(raw: string): string {
+  return raw.startsWith('client-') ? raw : `client-${raw}`
+}
+
+// External plugins sourced from Catalyze-Ax-Project/plugin repo.
 // 카운트는 아래에서 discussions/proposals/changes 길이로 다시 계산해 채움.
 const externalSkillsAsPlugins: Plugin[] = externalSkills.map((s) => ({
   id: s.id,
   name: s.name,
-  kind: 'skill',
+  // frontmatter kind는 외부에서 가져온 그대로지만, plugin md의 kind 갱신 전까지는
+  // 'skill' 값이 들어올 수 있으니 action으로 대체.
+  kind: ((s as { kind: string }).kind === 'skill'
+    ? 'action'
+    : ((s as { kind: string }).kind as PluginKind)) ?? 'action',
   team: s.team,
   description: s.core_value,
   tags: s.tags ?? [],
   updatedAt: s.updated_at,
-  skillsCount: 0,
+  linkedClients: (s.linked_clients ?? []).map(normalizeClientId),
   discussionsCount: 0,
   proposalsCount: 0,
   adoptionCount: 0,
@@ -300,8 +315,14 @@ export const getChangesByPlugin = (pluginId: string) => changes.filter((c) => c.
 export const getMemberByName = (name: string) => members.find((m) => m.name === name)
 export const getMemberById = (id: string) => members.find((m) => m.id === id)
 
-export const skillPlugins = plugins.filter((p) => p.kind === 'skill')
+export const actionPlugins = plugins.filter((p) => p.kind === 'action')
+export const contextPlugins = plugins.filter((p) => p.kind === 'context')
 export const clientPlugins = plugins.filter((p) => p.kind === 'client')
+
+// 특정 client에 귀속되는 plugin (linkedClients 기반).
+export function getPluginsLinkedToClient(clientId: string): Plugin[] {
+  return plugins.filter((p) => p.linkedClients?.includes(clientId))
+}
 
 // ----------------------------------------------------------------------------
 // Client metadata — 플러그인 형식 이상의 "고객사 세팅" 정보.
@@ -382,12 +403,13 @@ export function getMemberProjects(memberId: string): ProjectRef[] {
     .filter((p): p is ProjectRef => !!p)
 }
 
-// kind-aware 라우팅 헬퍼 — 플러그인 종류별로 올바른 상세 URL 리턴.
+// kind-aware 라우팅 헬퍼.
+// client는 전용 세팅 허브(/clients/[id])로, 그 외 plugin은 /plugins/[id] 공용 상세로.
+// (이전엔 skill kind가 /skills/[id]로 갔으나 /skills는 크래프트 테이블로 재정의됨)
 export function getPluginHref(pluginOrId: Plugin | string | undefined): string {
   const plugin =
     typeof pluginOrId === 'string' ? getPluginById(pluginOrId) : pluginOrId
   if (!plugin) return '/plugins'
   if (plugin.kind === 'client') return `/clients/${plugin.id}`
-  if (plugin.kind === 'skill') return `/skills/${plugin.id}`
   return `/plugins/${plugin.id}`
 }

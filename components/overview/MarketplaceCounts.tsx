@@ -1,15 +1,15 @@
 import { Puzzle, Sparkles, Briefcase, Bot } from 'lucide-react'
-import { plugins, skillPlugins, clientPlugins } from '@/lib/mock-data'
+import { plugins, actionPlugins, clientPlugins } from '@/lib/mock-data'
 
 export function MarketplaceCounts() {
   const totalPlugins = plugins.length
-  const totalSkills = skillPlugins.length
+  const totalActions = actionPlugins.length
   const totalClients = clientPlugins.length
 
   return (
     <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <Count icon={<Puzzle className="size-4" />} label="Plugins" value={totalPlugins} />
-      <Count icon={<Sparkles className="size-4" />} label="Skills" value={totalSkills} />
+      <Count icon={<Sparkles className="size-4" />} label="Actions" value={totalActions} />
       <Count icon={<Briefcase className="size-4" />} label="Clients" value={totalClients} />
       <Count icon={<Bot className="size-4" />} label="Agents" value={0} note="Coming soon" muted />
     </section>

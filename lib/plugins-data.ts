@@ -11,7 +11,8 @@ import type { Team } from './mock-data'
 export type SkillFrontmatter = {
   id: string
   name: string
-  kind: 'skill'
+  // 'skill'은 컨셉 전환 전 plugin md용. 새 plugin은 action/context/common/agent.
+  kind: 'skill' | 'action' | 'context' | 'common' | 'agent'
   team: Team
   category: string
   core_value: string

@@ -7,12 +7,12 @@ import {
   Sparkles,
 } from 'lucide-react'
 import {
+  actionPlugins,
   changes,
   discussions,
   members,
   plugins,
   proposals,
-  skillPlugins,
 } from '@/lib/mock-data'
 import { isWithinWeek } from '@/lib/date-utils'
 import { HeroDonut } from './HeroDonut'
@@ -85,8 +85,8 @@ export function HeroBanner() {
             <HeroStat icon={<Puzzle className="size-3.5" />} label="Plugins" value={plugins.length} />
             <HeroStat
               icon={<Sparkles className="size-3.5" />}
-              label="Skills"
-              value={skillPlugins.length}
+              label="Actions"
+              value={actionPlugins.length}
             />
             <HeroStat
               icon={<Bot className="size-3.5" />}
