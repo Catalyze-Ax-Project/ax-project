@@ -186,7 +186,14 @@ const externalSkillsAsPlugins: Plugin[] = externalSkills.map((s) => ({
   contentPreview: s.body,
 }))
 
-const rawPlugins: Plugin[] = [...builtInPlugins, ...externalSkillsAsPlugins]
+// dedupe: 같은 id가 plugin repo에 들어와 있으면 빌트인은 양보한다.
+// (예: Ripple은 빌트인에 짧은 본문이 있지만 plugin repo의 clients/ripple.md가
+// 정식 본문. plugin md 쪽을 채택.)
+const externalIds = new Set(externalSkillsAsPlugins.map((p) => p.id))
+const rawPlugins: Plugin[] = [
+  ...builtInPlugins.filter((p) => !externalIds.has(p.id)),
+  ...externalSkillsAsPlugins,
+]
 
 // ----------------------------------------------------------------------------
 // Discussions / Proposals / Changes — globalThis 기반 mutable 저장소.

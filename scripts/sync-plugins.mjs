@@ -70,13 +70,27 @@ function readMdDir(dir) {
 
 const root = resolvePluginRoot()
 
-const skills = [
+// kind별 디렉토리. 'skills/' 하위는 legacy (전 컨셉에서 모든 plugin을 skills로 부르던
+// 시절의 잔재). 새 컨셉에서는 clients/ contexts/ actions/ 디렉토리에 kind별로 분리.
+// 둘 다 읽어 들이되 frontmatter kind 기준으로 분류.
+const allPlugins = [
+  // legacy
   ...readMdDir(join(root, 'skills/common')),
   ...readMdDir(join(root, 'skills/bd')),
   ...readMdDir(join(root, 'skills/dev-growth')),
   ...readMdDir(join(root, 'skills/marketing')),
   ...readMdDir(join(root, 'skills/operations')),
+  // new kind-based layout
+  ...readMdDir(join(root, 'clients')),
+  ...readMdDir(join(root, 'contexts')),
+  ...readMdDir(join(root, 'actions')),
+  ...readMdDir(join(root, 'common')),
+  ...readMdDir(join(root, 'agents')),
 ]
+
+// 출력 키 이름은 호환성을 위해 'skills' 그대로 유지 (lib/plugins-data.ts에서 읽음).
+// 실제로는 모든 kind의 plugin이 섞여 들어간다.
+const skills = allPlugins
 
 const teams = readMdDir(join(root, 'teams'))
 
